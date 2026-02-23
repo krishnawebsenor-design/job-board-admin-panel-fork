@@ -98,14 +98,14 @@ export default function UsersListPage() {
   const [formData, setFormData] = useState<AdminFormData>(initialFormData);
   const [editingAdmin, setEditingAdmin] = useState<IAdmin | null>(null);
 
-  // Fetch admins list with pagination (uses debounced search to reduce API calls)
+  // Fetch super employers list with pagination (uses debounced search to reduce API calls)
   const { data: adminsData, isLoading } = useQuery({
     queryKey: ['admins', page, limit, debouncedSearchQuery],
     queryFn: async () => {
       const params = new URLSearchParams({
         page: page.toString(),
         limit: limit.toString(),
-        role: 'admin',
+        role: 'super_employer',
         ...(debouncedSearchQuery && { search: debouncedSearchQuery }),
       });
       const response = await http.get(`${endpoints.user.list}?${params}`);
@@ -148,12 +148,12 @@ export default function UsersListPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admins'] });
-      toast.success('Admin created successfully and assigned to company');
+      toast.success('Super employer created successfully and assigned to company');
       setIsCreateOpen(false);
       setFormData(initialFormData);
     },
     onError: (error: unknown) => {
-      toast.error(getErrorMessage(error) || 'Failed to create admin');
+      toast.error(getErrorMessage(error) || 'Failed to create super employer');
     },
   });
 
@@ -164,13 +164,13 @@ export default function UsersListPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admins'] });
-      toast.success('Admin updated successfully');
+      toast.success('Super employer updated successfully');
       setIsEditOpen(false);
       setEditingAdmin(null);
       setFormData(initialFormData);
     },
     onError: (error: unknown) => {
-      toast.error(getErrorMessage(error) || 'Failed to update admin');
+      toast.error(getErrorMessage(error) || 'Failed to update super employer');
     },
   });
 
@@ -181,11 +181,11 @@ export default function UsersListPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admins'] });
-      toast.success('Admin deactivated successfully');
+      toast.success('Super employer deactivated successfully');
       setDeleteAdminId(null);
     },
     onError: (error: unknown) => {
-      toast.error(getErrorMessage(error) || 'Failed to deactivate admin');
+      toast.error(getErrorMessage(error) || 'Failed to deactivate super employer');
     },
   });
 
@@ -279,22 +279,22 @@ export default function UsersListPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Admin Management</h1>
-          <p className="text-muted-foreground">Manage admin accounts and permissions</p>
+          <h1 className="text-3xl font-bold">Super Employer Management</h1>
+          <p className="text-muted-foreground">Manage super employer accounts and permissions</p>
         </div>
         <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
           <DialogTrigger asChild>
             <Button>
               <Plus className="mr-2 h-4 w-4" />
-              Add Admin
+              Add Super Employer
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Create New Admin</DialogTitle>
+              <DialogTitle>Create New Super Employer</DialogTitle>
               <DialogDescription>
-                Add a new admin account to the platform. The ADMIN role will be automatically
-                assigned.
+                Add a new super employer account to the platform. The SUPER_EMPLOYER role will be
+                automatically assigned.
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
@@ -345,7 +345,7 @@ export default function UsersListPage() {
                   onValueChange={(value) => setFormData((prev) => ({ ...prev, companyId: value }))}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select company to assign admin" />
+                    <SelectValue placeholder="Select company to assign super employer" />
                   </SelectTrigger>
                   <SelectContent>
                     {companies.length === 0 ? (
@@ -362,7 +362,7 @@ export default function UsersListPage() {
                   </SelectContent>
                 </Select>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Admin will be scoped to this company
+                  Super employer will be scoped to this company
                 </p>
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -401,7 +401,7 @@ export default function UsersListPage() {
                   Cancel
                 </Button>
                 <Button onClick={handleCreate} disabled={createMutation.isPending}>
-                  {createMutation.isPending ? 'Creating...' : 'Create Admin'}
+                  {createMutation.isPending ? 'Creating...' : 'Create Super Employer'}
                 </Button>
               </div>
             </div>
@@ -413,7 +413,7 @@ export default function UsersListPage() {
       <div className="grid gap-4 md:grid-cols-3">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Total Admins</CardTitle>
+            <CardTitle className="text-sm font-medium">Total Super Employers</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{total}</div>
@@ -421,7 +421,7 @@ export default function UsersListPage() {
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Active Admins</CardTitle>
+            <CardTitle className="text-sm font-medium">Active Super Employers</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{activeAdmins}</div>
@@ -429,7 +429,7 @@ export default function UsersListPage() {
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Verified Admins</CardTitle>
+            <CardTitle className="text-sm font-medium">Verified Super Employers</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{verifiedAdmins}</div>
@@ -444,7 +444,7 @@ export default function UsersListPage() {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search admins by name, email..."
+                placeholder="Search super employers by name, email..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10"
@@ -454,21 +454,21 @@ export default function UsersListPage() {
         </CardContent>
       </Card>
 
-      {/* Admins Table */}
+      {/* Super Employers Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Admins List</CardTitle>
-          <CardDescription>View and manage all admin accounts</CardDescription>
+          <CardTitle>Super Employers List</CardTitle>
+          <CardDescription>View and manage all super employer accounts</CardDescription>
         </CardHeader>
         <CardContent>
           {isLoading ? (
             <div className="flex items-center justify-center py-8">
-              <p className="text-muted-foreground">Loading admins...</p>
+              <p className="text-muted-foreground">Loading super employers...</p>
             </div>
           ) : admins.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-8 text-center">
               <Shield className="h-12 w-12 text-muted-foreground mb-4" />
-              <p className="text-muted-foreground">No admins found</p>
+              <p className="text-muted-foreground">No super employers found</p>
             </div>
           ) : (
             <>
@@ -477,7 +477,7 @@ export default function UsersListPage() {
                   <TableRow>
                     <TableHead>Name</TableHead>
                     <TableHead>Email</TableHead>
-                    <TableHead>Role</TableHead>
+                    <TableHead>Company Name</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Created At</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
@@ -507,7 +507,7 @@ export default function UsersListPage() {
                           admin.email
                         )}
                       </TableCell>
-                      <TableCell>{admin.role || 'N/A'}</TableCell>
+                      <TableCell>{admin.employer?.company?.name || 'N/A'}</TableCell>
                       <TableCell>
                         {getStatusBadge(getEffectiveActiveStatus(admin.email, admin.isActive))}
                       </TableCell>
@@ -520,7 +520,9 @@ export default function UsersListPage() {
                             onClick={() => handleEdit(admin)}
                             disabled={isDeletedUser(admin.email)}
                             title={
-                              isDeletedUser(admin.email) ? 'Cannot edit deleted user' : 'Edit admin'
+                              isDeletedUser(admin.email)
+                                ? 'Cannot edit deleted user'
+                                : 'Edit super employer'
                             }
                           >
                             <Edit className="h-4 w-4" />
@@ -531,7 +533,9 @@ export default function UsersListPage() {
                             onClick={() => setDeleteAdminId(admin.id)}
                             disabled={isDeletedUser(admin.email)}
                             title={
-                              isDeletedUser(admin.email) ? 'User already deleted' : 'Delete admin'
+                              isDeletedUser(admin.email)
+                                ? 'User already deleted'
+                                : 'Delete super employer'
                             }
                           >
                             <Trash2 className="h-4 w-4 text-red-500" />
@@ -548,7 +552,7 @@ export default function UsersListPage() {
                 <div className="flex items-center justify-between mt-4">
                   <p className="text-sm text-muted-foreground">
                     Showing {(page - 1) * limit + 1} to {Math.min(page * limit, total)} of {total}{' '}
-                    admins
+                    super employers
                   </p>
                   <div className="flex items-center gap-2">
                     <Button
@@ -582,8 +586,8 @@ export default function UsersListPage() {
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Edit Admin</DialogTitle>
-            <DialogDescription>Update admin account information</DialogDescription>
+            <DialogTitle>Edit Super Employer</DialogTitle>
+            <DialogDescription>Update super employer account information</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
@@ -627,7 +631,7 @@ export default function UsersListPage() {
                 Cancel
               </Button>
               <Button onClick={handleUpdate} disabled={updateMutation.isPending}>
-                {updateMutation.isPending ? 'Updating...' : 'Update Admin'}
+                {updateMutation.isPending ? 'Updating...' : 'Update Super Employer'}
               </Button>
             </div>
           </div>
@@ -638,10 +642,10 @@ export default function UsersListPage() {
       <AlertDialog open={!!deleteAdminId} onOpenChange={() => setDeleteAdminId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Deactivate Admin</AlertDialogTitle>
+            <AlertDialogTitle>Deactivate Super Employer</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to deactivate this admin? This action will mark the admin as
-              inactive.
+              Are you sure you want to deactivate this super employer? This action will mark the
+              super employer as inactive.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

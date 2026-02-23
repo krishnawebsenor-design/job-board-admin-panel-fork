@@ -37,7 +37,12 @@ import { canManageCompanies, canManageAdmins, canViewAnalytics } from '@/lib/per
 const getAllMainItems = (user: User | null) =>
   [
     { title: 'Dashboard', url: routePath.DASHBOARD, icon: BarChart3, show: canViewAnalytics(user) },
-    { title: 'Admins', url: routePath.USER.LIST, icon: Users, show: canManageAdmins(user) },
+    {
+      title: 'Super Employers',
+      url: routePath.USER.LIST,
+      icon: Users,
+      show: canManageAdmins(user),
+    },
   ].filter((item) => item.show);
 
 const getAllAdminItems = (user: User | null) =>

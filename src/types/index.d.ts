@@ -18,6 +18,16 @@ export interface IAdmin {
   email: string;
   role: string;
   roleId?: string;
+  companyId?: string;
+  employer?: {
+    id: string;
+    companyId?: string;
+    company?: {
+      id: string;
+      name: string;
+      slug?: string;
+    };
+  };
   isActive: boolean;
   isVerified: boolean;
   createdAt: string;
