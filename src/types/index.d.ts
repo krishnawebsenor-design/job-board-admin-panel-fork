@@ -273,10 +273,13 @@ export type EducationLevel =
   | 'diploma'
   | 'certificate';
 
+export type MasterDataType = 'master-typed' | 'user-typed';
+
 export interface IMasterDegree {
   id: string;
   name: string;
   level: EducationLevel;
+  type: MasterDataType;
   isActive: boolean;
   createdAt: string;
   updatedAt?: string;
@@ -286,6 +289,7 @@ export interface IMasterFieldOfStudy {
   id: string;
   degreeId: string;
   name: string;
+  type: MasterDataType;
   isActive: boolean;
   createdAt: string;
   updatedAt?: string;
