@@ -49,11 +49,12 @@ import {
   BookOpen,
   ChevronLeft,
   ChevronRight,
+  Users,
 } from 'lucide-react';
 import http from '@/api/http';
 import endpoints from '@/api/endpoints';
 import { useDebounce } from '@/hooks/useDebounce';
-import type { IMasterDegree, IMasterFieldOfStudy, EducationLevel } from '@/types';
+import type { IMasterDegree, IMasterFieldOfStudy, EducationLevel, MasterDataType } from '@/types';
 
 interface PaginatedResponse<T> {
   data: T[];
@@ -93,6 +94,7 @@ export default function EducationPage() {
   const [degreePage, setDegreePage] = useState(1);
   const [degreeSearch, setDegreeSearch] = useState('');
   const [degreeLevelFilter, setDegreeLevelFilter] = useState<string>('all');
+  const [degreeTypeFilter, setDegreeTypeFilter] = useState<'all' | MasterDataType>('all');
   const debouncedDegreeSearch = useDebounce(degreeSearch, 500);
 
   const [selectedDegree, setSelectedDegree] = useState<IMasterDegree | null>(null);
@@ -105,12 +107,14 @@ export default function EducationPage() {
   const [editDegree, setEditDegree] = useState<IMasterDegree | null>(null);
   const [editDegreeName, setEditDegreeName] = useState('');
   const [editDegreeLevel, setEditDegreeLevel] = useState<EducationLevel>('bachelors');
+  const [editDegreeType, setEditDegreeType] = useState<MasterDataType>('master-typed');
 
   const [deleteDegreeId, setDeleteDegreeId] = useState<string | null>(null);
 
   // ---- Fields of Study state ----
   const [fosPage, setFosPage] = useState(1);
   const [fosSearch, setFosSearch] = useState('');
+  const [fosTypeFilter, setFosTypeFilter] = useState<'all' | MasterDataType>('all');
   const debouncedFosSearch = useDebounce(fosSearch, 500);
 
   const [addFosOpen, setAddFosOpen] = useState(false);
@@ -119,6 +123,7 @@ export default function EducationPage() {
   const [editFosOpen, setEditFosOpen] = useState(false);
   const [editFos, setEditFos] = useState<IMasterFieldOfStudy | null>(null);
   const [editFosName, setEditFosName] = useState('');
+  const [editFosType, setEditFosType] = useState<MasterDataType>('master-typed');
 
   const [deleteFosId, setDeleteFosId] = useState<string | null>(null);
 
@@ -132,22 +137,24 @@ export default function EducationPage() {
 
   // ---- Queries ----
   const { data: degreesData, isLoading: degreesLoading } = useQuery({
-    queryKey: ['degrees', degreePage, debouncedDegreeSearch, degreeLevelFilter],
+    queryKey: ['degrees', degreePage, debouncedDegreeSearch, degreeLevelFilter, degreeTypeFilter],
     queryFn: async () => {
       const params: Record<string, any> = { page: degreePage, limit: 15 };
       if (debouncedDegreeSearch) params.search = debouncedDegreeSearch;
       if (degreeLevelFilter !== 'all') params.level = degreeLevelFilter;
+      if (degreeTypeFilter !== 'all') params.type = degreeTypeFilter;
       const res = await http.get(endpoints.degrees.list, { params });
       return res as unknown as PaginatedResponse<IMasterDegree>;
     },
   });
 
   const { data: fosData, isLoading: fosLoading } = useQuery({
-    queryKey: ['fields-of-study', selectedDegree?.id, fosPage, debouncedFosSearch],
+    queryKey: ['fields-of-study', selectedDegree?.id, fosPage, debouncedFosSearch, fosTypeFilter],
     queryFn: async () => {
       if (!selectedDegree) return null;
       const params: Record<string, any> = { page: fosPage, limit: 15 };
       if (debouncedFosSearch) params.search = debouncedFosSearch;
+      if (fosTypeFilter !== 'all') params.type = fosTypeFilter;
       const res = await http.get(endpoints.degrees.fieldsOfStudy(selectedDegree.id), { params });
       return res as unknown as PaginatedResponse<IMasterFieldOfStudy>;
     },
@@ -170,8 +177,13 @@ export default function EducationPage() {
   });
 
   const updateDegreeMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: { name?: string; level?: EducationLevel } }) =>
-      http.put(endpoints.degrees.update(id), data),
+    mutationFn: ({
+      id,
+      data,
+    }: {
+      id: string;
+      data: { name?: string; level?: EducationLevel; type?: MasterDataType };
+    }) => http.put(endpoints.degrees.update(id), data),
     onSuccess: () => {
       toast.success('Degree updated successfully');
       queryClient.refetchQueries({ queryKey: ['degrees'] });
@@ -213,7 +225,7 @@ export default function EducationPage() {
   });
 
   const updateFosMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: { name: string } }) =>
+    mutationFn: ({ id, data }: { id: string; data: { name: string; type?: MasterDataType } }) =>
       http.put(endpoints.fieldsOfStudy.update(id), data),
     onSuccess: () => {
       toast.success('Field of study updated successfully');
@@ -239,12 +251,14 @@ export default function EducationPage() {
     setEditDegree(degree);
     setEditDegreeName(degree.name);
     setEditDegreeLevel(degree.level);
+    setEditDegreeType(degree.type);
     setEditDegreeOpen(true);
   };
 
   const openEditFos = (fos: IMasterFieldOfStudy) => {
     setEditFos(fos);
     setEditFosName(fos.name);
+    setEditFosType(fos.type);
     setEditFosOpen(true);
   };
 
@@ -252,6 +266,24 @@ export default function EducationPage() {
   const degreeMeta = degreesData?.meta;
   const fosList = fosData?.data ?? [];
   const fosMeta = fosData?.meta;
+
+  // Helper function to render type badge
+  const getTypeBadge = (type: MasterDataType) => {
+    if (type === 'master-typed') {
+      return (
+        <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+          <BookOpen className="mr-1 h-3 w-3" />
+          Master
+        </Badge>
+      );
+    }
+    return (
+      <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">
+        <Users className="mr-1 h-3 w-3" />
+        User Typed
+      </Badge>
+    );
+  };
 
   return (
     <div className="p-6 space-y-6">
@@ -293,6 +325,22 @@ export default function EducationPage() {
                 />
               </div>
               <Select
+                value={degreeTypeFilter}
+                onValueChange={(v) => {
+                  setDegreeTypeFilter(v as 'all' | MasterDataType);
+                  setDegreePage(1);
+                }}
+              >
+                <SelectTrigger className="w-36">
+                  <SelectValue placeholder="Type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Types</SelectItem>
+                  <SelectItem value="master-typed">Master</SelectItem>
+                  <SelectItem value="user-typed">User Typed</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select
                 value={degreeLevelFilter}
                 onValueChange={(v) => {
                   setDegreeLevelFilter(v);
@@ -321,19 +369,20 @@ export default function EducationPage() {
                   <TableHead>#</TableHead>
                   <TableHead>Degree Name</TableHead>
                   <TableHead>Level</TableHead>
+                  <TableHead>Type</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {degreesLoading ? (
                   <TableRow>
-                    <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
                       Loading...
                     </TableCell>
                   </TableRow>
                 ) : degrees.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
                       No degrees found. Add your first degree.
                     </TableCell>
                   </TableRow>
@@ -368,6 +417,7 @@ export default function EducationPage() {
                           {getLevelLabel(degree.level)}
                         </span>
                       </TableCell>
+                      <TableCell>{getTypeBadge(degree.type)}</TableCell>
                       <TableCell className="text-right">
                         <div
                           className="flex justify-end gap-1"
@@ -462,14 +512,32 @@ export default function EducationPage() {
             )}
 
             {selectedDegree && (
-              <div className="relative mt-3">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search fields of study..."
-                  value={fosSearch}
-                  onChange={(e) => setFosSearch(e.target.value)}
-                  className="pl-9"
-                />
+              <div className="flex gap-2 mt-3">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search fields of study..."
+                    value={fosSearch}
+                    onChange={(e) => setFosSearch(e.target.value)}
+                    className="pl-9"
+                  />
+                </div>
+                <Select
+                  value={fosTypeFilter}
+                  onValueChange={(v) => {
+                    setFosTypeFilter(v as 'all' | MasterDataType);
+                    setFosPage(1);
+                  }}
+                >
+                  <SelectTrigger className="w-36">
+                    <SelectValue placeholder="Type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Types</SelectItem>
+                    <SelectItem value="master-typed">Master</SelectItem>
+                    <SelectItem value="user-typed">User Typed</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             )}
           </CardHeader>
@@ -487,19 +555,20 @@ export default function EducationPage() {
                     <TableRow>
                       <TableHead>#</TableHead>
                       <TableHead>Field of Study</TableHead>
+                      <TableHead>Type</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {fosLoading ? (
                       <TableRow>
-                        <TableCell colSpan={3} className="text-center py-8 text-muted-foreground">
+                        <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
                           Loading...
                         </TableCell>
                       </TableRow>
                     ) : fosList.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={3} className="text-center py-8 text-muted-foreground">
+                        <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
                           No fields of study yet. Add one.
                         </TableCell>
                       </TableRow>
@@ -510,6 +579,7 @@ export default function EducationPage() {
                             {(fosPage - 1) * 15 + idx + 1}
                           </TableCell>
                           <TableCell className="font-medium">{fos.name}</TableCell>
+                          <TableCell>{getTypeBadge(fos.type)}</TableCell>
                           <TableCell className="text-right">
                             <div className="flex justify-end gap-1">
                               <Button
@@ -626,7 +696,7 @@ export default function EducationPage() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Edit Degree</DialogTitle>
-            <DialogDescription>Update the degree name or level.</DialogDescription>
+            <DialogDescription>Update the degree name, level, or type.</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div className="space-y-2">
@@ -651,6 +721,21 @@ export default function EducationPage() {
                 </SelectContent>
               </Select>
             </div>
+            <div className="space-y-2">
+              <Label>Type</Label>
+              <Select
+                value={editDegreeType}
+                onValueChange={(v) => setEditDegreeType(v as MasterDataType)}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="master-typed">Master Typed</SelectItem>
+                  <SelectItem value="user-typed">User Typed</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditDegreeOpen(false)}>
@@ -662,7 +747,7 @@ export default function EducationPage() {
                 editDegree &&
                 updateDegreeMutation.mutate({
                   id: editDegree.id,
-                  data: { name: editDegreeName, level: editDegreeLevel },
+                  data: { name: editDegreeName, level: editDegreeLevel, type: editDegreeType },
                 })
               }
             >
@@ -731,11 +816,28 @@ export default function EducationPage() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Edit Field of Study</DialogTitle>
-            <DialogDescription>Update the field of study name.</DialogDescription>
+            <DialogDescription>Update the field of study name or type.</DialogDescription>
           </DialogHeader>
-          <div className="space-y-2 py-2">
-            <Label>Field Name</Label>
-            <Input value={editFosName} onChange={(e) => setEditFosName(e.target.value)} />
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label>Field Name</Label>
+              <Input value={editFosName} onChange={(e) => setEditFosName(e.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <Label>Type</Label>
+              <Select
+                value={editFosType}
+                onValueChange={(v) => setEditFosType(v as MasterDataType)}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="master-typed">Master Typed</SelectItem>
+                  <SelectItem value="user-typed">User Typed</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditFosOpen(false)}>
@@ -744,7 +846,11 @@ export default function EducationPage() {
             <Button
               disabled={!editFosName.trim() || updateFosMutation.isPending}
               onClick={() =>
-                editFos && updateFosMutation.mutate({ id: editFos.id, data: { name: editFosName } })
+                editFos &&
+                updateFosMutation.mutate({
+                  id: editFos.id,
+                  data: { name: editFosName, type: editFosType },
+                })
               }
             >
               {updateFosMutation.isPending ? 'Saving...' : 'Save Changes'}
