@@ -138,6 +138,12 @@ const endpoints = {
     updateImage: (id: string) => `/avatars/${id}/image`,
     delete: (id: string) => `/avatars/${id}`,
   },
+  filterOptions: {
+    list: '/admin/filter-options',
+    create: '/admin/filter-options',
+    update: (id: string) => `/admin/filter-options/${id}`,
+    delete: (id: string) => `/admin/filter-options/${id}`,
+  },
 };
 
 export default endpoints;

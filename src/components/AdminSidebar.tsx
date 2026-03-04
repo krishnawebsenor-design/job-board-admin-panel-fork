@@ -19,6 +19,7 @@ import {
   Zap,
   GraduationCap,
   Image,
+  Filter,
 } from 'lucide-react';
 import {
   Sidebar,
@@ -124,6 +125,12 @@ const getAllAdminItems = (user: User | null) =>
           title: 'Education',
           url: routePath.MASTER_DATA.EDUCATION,
           icon: GraduationCap,
+          show: true,
+        },
+        {
+          title: 'Job Filters',
+          url: routePath.MASTER_DATA.JOB_FILTERS,
+          icon: Filter,
           show: true,
         },
       ],
